@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 
 // GET /api/tasks - list all active (non-archived) tasks
-export async function GET() {
-  const tasks = db.prepare(
-    'SELECT * FROM tasks WHERE archived_at IS NULL ORDER BY created_at DESC'
-  ).all();
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const showArchived = searchParams.get('archived') === 'true';
+
+  const tasks = showArchived
+    ? db.prepare('SELECT * FROM tasks WHERE archived_at IS NOT NULL ORDER BY created_at DESC').all()
+    : db.prepare('SELECT * FROM tasks WHERE archived_at IS NULL ORDER BY created_at DESC').all();
+
   return NextResponse.json(tasks);
 }
 
